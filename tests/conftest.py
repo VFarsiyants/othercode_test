@@ -1,9 +1,9 @@
 import pytest
+from fixtures.insert_data import insert_data
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from fixtures.insert_data import insert_data
 from src.auth.utils import encode_jwt
 from src.core import crud, schemas
 from src.core.models import Base

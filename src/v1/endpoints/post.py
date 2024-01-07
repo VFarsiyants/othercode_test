@@ -1,4 +1,4 @@
-from typing import Annotated, List
+from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core import crud, models, schemas
 from src.dependencies import get_db
 
-from .dependencies import GetObject, GetObjects, get_current_auth_user
+from .dependencies import CheckPerm, GetObject, GetObjects, get_current_auth_user
 
 router = APIRouter(
     prefix='/post'
@@ -17,7 +17,8 @@ router = APIRouter(
 async def create_post(
     post: schemas.PostCreate,
     db: AsyncSession = Depends(get_db),
-    user: schemas.User = Depends(get_current_auth_user)
+    user: schemas.User = Depends(get_current_auth_user),
+    _: None = Depends(CheckPerm('post', 'CREATE'))
 ):
     return await crud.create_post(db, user, post)
 

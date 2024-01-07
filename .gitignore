@@ -123,7 +123,9 @@ celerybeat.pid
 # Environments
 .env
 .venv
+docker.env
 env/
+postgresql-data/
 venv/
 ENV/
 env.bak/

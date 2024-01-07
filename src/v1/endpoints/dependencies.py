@@ -1,10 +1,11 @@
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Query, Request, Response, status
 from fastapi.security import HTTPBearer
 from jwt import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.utils import check_password, decode_jwt
 from src.core import crud, schemas
+from src.core.models.exeptions import IncorrectFilterExeption
 from src.dependencies import get_db
 
 
@@ -65,6 +66,24 @@ REQUEST_TO_ACTION = {
 }
 
 
+class CheckPerm:
+    def __init__(self, resource, action):
+        self.action = action
+        self.resource = resource
+
+    async def __call__(
+        self,
+        db: AsyncSession = Depends(get_db),
+        user: schemas.User = Depends(get_current_auth_user),
+    ):
+        has_permission = await crud.check_permission(
+            db, self.resource, self.action, user=user)
+        if not has_permission:
+            raise HTTPException(
+                status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                detail='You don\'t have enough rights to perform this operation')
+
+
 class GetObject:
     def __init__(self, model, resource):
         self.model = model
@@ -103,12 +122,25 @@ class GetObjects:
     async def __call__(
         self,
         request: Request,
+        response: Response,
         skip: int | None = None,
         limit: int | None = None,
         user=Depends(get_current_auth_user),
         db: AsyncSession = Depends(get_db),
+        base_filter: str | None = Query(
+            default=None,
+            examples=[
+                '{ "author__firstname": "Example", "name": "Example post name" }'
+            ])
     ):
-        items = await crud.get_items(db, self.model, skip=skip, limit=limit)
+        try:
+            items = await crud.get_items(
+                db, self.model, skip=skip, limit=limit, filter=base_filter)
+        except IncorrectFilterExeption:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Incorrect base filter parameter'
+            )
         action = REQUEST_TO_ACTION[request.method]
         has_permission = await crud.check_permission(
             db, self.resource, action, user=user)
@@ -116,4 +148,6 @@ class GetObjects:
             raise HTTPException(
                 status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
                 detail='You don\'t have enough rights to perform this operation')
+        response.headers['X-Total-Count'] = str(await crud.get_total_count(
+            db, self.model, filter=base_filter))
         return items

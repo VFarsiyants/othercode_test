@@ -1,0 +1,18 @@
+[
+  {
+    "id": "f1f8f84c-5d85-4fc0-a5c0-595be204df94",
+    "name": "user"
+  },
+  {
+    "id": "11bd4f7e-4f12-4e33-ba64-37bdaab979bc",
+    "name": "admin"
+  },
+  {
+    "id": "a19c12dc-8cb4-4086-9838-171b51fafff3",
+    "name": "moderator"
+  },
+  {
+    "id": "587eba73-b75c-40fa-8200-a610f9044000",
+    "name": "anonimus"
+  }
+]

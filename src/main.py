@@ -4,7 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src import v1
 
-app = FastAPI()
+app = FastAPI(
+    title='otherblog',
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json",
+)
 
 origins = [
     "http://localhost",
